@@ -122,7 +122,13 @@ class OpenCard extends React.Component {
 class Search extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { value: ""};
+
+    if (props.searchString) {
+   this.state = { value: props.searchString};
+    } else {
+    this.state = { value: ""};     
+    }
+ 
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -171,7 +177,7 @@ class CardStar extends React.Component {
     return React.createElement(
       "div",
       { className: "card-star", onClick: this.handleClick },
-      "S"
+      "★"
     );
   }
 }
@@ -437,7 +443,18 @@ const reqListener = function() {
     }, this);
   });
 
-  renderAll();
+
+  // Check for URL search string
+  const searchParams = new URLSearchParams(window.location.search.substring(1));
+
+  if (searchParams.has("q")) {
+    
+    updateSearch(searchParams.get("q"));
+  } else {
+  renderAll();   
+  }
+
+ 
 };
 
 const oReq = new XMLHttpRequest();
