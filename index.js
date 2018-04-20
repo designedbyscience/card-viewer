@@ -20,7 +20,7 @@ class App extends React.Component {
     };
 
     this.handleMouseUp = this.handleMouseUp.bind(this);
-    this.handleKeyUp = this.handleKeyUp.bind(this);    
+    this.handleKeyUp = this.handleKeyUp.bind(this);
   }
   
   componentWillMount() {
@@ -32,10 +32,14 @@ class App extends React.Component {
   }  
   
   handleMouseUp(index) {
-    if (this.state && this.state.peeking && !this.open) {
+    if (this.state && this.state.peeking && !this.state.open) {
       this.setState({
         open: false,
         peeking: false
+      });
+    } else if (this.state && this.state.open) {
+      this.setState({
+        open: false
       });
     }
   }
@@ -48,7 +52,6 @@ class App extends React.Component {
   }
   
   handleKeyUp(e) {
-      // console.log(e);
       if (e.code == "KeyS" && e.altKey) {
           if (window.getSelection().toString() != "") {
               updateSearch(window.getSelection().toString());
@@ -88,15 +91,20 @@ class OpenCard extends React.Component {
     super(props);
 
     this.handleClick = this.handleClick.bind(this);
+    this.handleMouseup = this.handleMouseup.bind(this);    
   }
 
-  handleClick() {
+  handleMouseup(e) {
+     e.stopPropagation();
+  }
+
+  handleClick(e) {
     this.props.handleOpen(this.props.note.id);
   }
 
   render() {
     if (this.props.note) {
-      return React.createElement("div", { className: "card-open" }, [
+      return React.createElement("div", { onMouseUp: this.handleMouseup, className: "card-open" }, [
         React.createElement(
           CardStar,
           { index: this.props.note.id, key: 1 },
