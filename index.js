@@ -44,9 +44,10 @@ class App extends React.Component {
     }
   }
 
-  handleOpen(index, peeking) {
+  handleOpen(id, peeking) {
     this.setState({
-      open: this.state.open !== index ? index : false,
+      open: this.state.open !== id ? id : false,
+      starredOpen: noteById(id).starred,
       peeking: peeking
     });
   }
@@ -58,6 +59,41 @@ class App extends React.Component {
           }
       } else if (e.code == "Escape" ) {
           this.setState({open: false});
+      } 
+
+      const getNextId = function (list, id) {
+        let currentIndex = list.findIndex( n => {return id == n.id});
+        return currentIndex == 0 ? list[list.length - 1].id : list[currentIndex - 1].id;
+      }
+
+      const getPreviousId = function (list, id) {
+        let currentIndex = list.findIndex( n => {return id == n.id});
+        return currentIndex == list.length-1 ? list[0].id : list[currentIndex + 1].id;
+      }      
+
+      const updateCardOpenState = (function (directionFunction) {
+            if (this.state.starredOpen) {
+              this.setState({open: directionFunction(this.props.starredNotes, this.state.open)});
+            }
+            else if (this.props.searchResultNotes){
+              this.setState({ open: directionFunction(this.props.searchResultNotes, this.state.open)});            }
+            else {
+               this.setState({open: directionFunction(this.props.notes, this.state.open)});
+            }
+
+      }).bind(this);
+
+
+      if (this.state && this.state.open !== false) {
+        if (e.code == "ArrowLeft") {
+            updateCardOpenState(getNextId);
+        } else if (e.code == "ArrowRight") {
+           updateCardOpenState(getPreviousId);
+        } else if (e.code == "ArrowUp") {
+          updateStarred(this.state.open);
+        } else if (e.code == "ArrowDown") {
+          this.setState({open: false});
+        }
       }
   }
 
@@ -78,7 +114,7 @@ class App extends React.Component {
       React.createElement(CardList, {
         handleOpen: this.handleOpen.bind(this),
         searchResult: this.props.searchResult,
-        notes: this.props.notes,
+        notes: this.props.searchResult ? this.props.searchResultNotes : this.props.notes,
         peeking: this.state.peeking,
         key: 4
       })
@@ -247,7 +283,7 @@ class Card extends React.Component {
   handleMousedown(e) {
     if (e.altKey) {
       this.props.handleOpen(this.props.note.id, true);
-      // this.setState({peeking: true});
+
     }
   }
 
@@ -308,7 +344,6 @@ class CardList extends React.Component {
       let childProps = {
         note: n,
         key: index,
-        open: this.state && this.state.open === n.id,
         handleOpen: this.props.handleOpen,
         peeking: this.props.peeking
       };
@@ -319,20 +354,6 @@ class CardList extends React.Component {
 
       return React.createElement(Card, childProps);
     });
-
-    if (this.props.searchResult) {
-      children.sort((a, b) => {
-        if (a.props.note.searchResult.score > b.props.note.searchResult.score) {
-          return -1;
-        } else if (
-          a.props.note.searchResult.score < b.props.note.searchResult.score
-        ) {
-          return 1;
-        }
-
-        return 0;
-      });
-    }
 
     return React.createElement("div", { className: "card-list" }, children);
   }
@@ -371,7 +392,11 @@ let colorstops = [
   "hsl(215, 100%, 90%)"
 ];
 
-const renderAll = function(searchString = "") {
+const noteById = function(id) {
+  return notes.find(n => {return n.id == id});
+}
+
+const renderAll = function(searchString = "", searchResultNotes = false) {
   let starredNotes = notes.filter(n => {
     return n.starred;
   });
@@ -381,6 +406,7 @@ const renderAll = function(searchString = "") {
       searchResult: searchResult,
       searchString: searchString,
       starredNotes: starredNotes,
+      searchResultNotes: searchResultNotes,
       notes: notes
     }),
     document.getElementById("root")
@@ -388,11 +414,9 @@ const renderAll = function(searchString = "") {
 };
 
 const updateStarred = function(index) {
-  if (notes[index].starred) {
-    notes[index].starred = false;
-  } else {
-    notes[index].starred = true;
-  }
+  let note = noteById(index);
+
+  note.starred = !note.starred;
 
   renderAll();
 };
@@ -407,20 +431,48 @@ const updateSearch = function(searchString) {
 
     if (pastResult) {
       pastResult.forEach(r => {
-        notes[r.ref].searchResult = { score: 0 };
+
+        noteById(r.ref).searchResult = { score: 0 };
       });
     }
 
-    result.forEach(r => {
-      notes[r.ref].searchResult = r;
+    let searchResultNotes = result.map( r => {
+      let n = noteById(r.ref);
+      n.searchResult = r;
+      return n;
+
     });
 
     pastResult = result;
+
+      searchResultNotes.sort((a, b) => {
+        if (a.searchResult.score > b.searchResult.score) {
+          return -1;
+        } else if ( a.searchResult.score < b.searchResult.score ) {
+          return 1;
+        }
+
+        return 0;
+      });
+  
+      renderAll(searchString, searchResultNotes);
+
   } else {
     searchResult = false;
+    notes.sort((a, b) => {
+        if (a.title < b.title) {
+          return -1;
+        } else if ( a.title > b.title ) {
+          return 1;
+        }
+
+        return 0;
+    });
+
+      renderAll(searchString);
   }
 
-  renderAll(searchString);
+
 };
 
 const reqListener = function() {
