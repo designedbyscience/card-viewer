@@ -83,15 +83,14 @@ class App extends React.Component {
 
       }).bind(this);
 
-
       if (this.state && this.state.open !== false) {
-        if (e.code == "ArrowLeft") {
+        if (e.code == "ArrowLeft" || e.key == "UIKeyInputLeftArrow") {
             updateCardOpenState(getNextId);
-        } else if (e.code == "ArrowRight") {
+        } else if (e.code == "ArrowRight" || e.key == "UIKeyInputRightArrow") {
            updateCardOpenState(getPreviousId);
-        } else if (e.code == "ArrowUp") {
+        } else if (e.code == "ArrowUp" || e.key == "UIKeyInputUpArrow") {
           updateStarred(this.state.open);
-        } else if (e.code == "ArrowDown") {
+        } else if (e.code == "ArrowDown" || e.key == "UIKeyInputDownArrow") {
           this.setState({open: false});
         }
       }
@@ -278,6 +277,7 @@ class Card extends React.Component {
 
     this.handleMousedown = this.handleMousedown.bind(this);
     this.handleMouseup = this.handleMouseup.bind(this);
+    this.handleTouchEnd = this.handleTouchEnd.bind(this);    
   }
 
   handleMousedown(e) {
@@ -291,6 +291,10 @@ class Card extends React.Component {
     if (!this.props.peeking) {
       this.props.handleOpen(this.props.note.id);
     }
+  }
+
+  handleTouchEnd() {
+    this.props.handleOpen(this.props.note.id, true);
   }
 
   render() {
@@ -322,6 +326,7 @@ class Card extends React.Component {
           {
             onMouseUp: this.handleMouseup,
             onMouseDown: this.handleMousedown,
+            onTouchEnd: this.handleTouchEnd,
             className: "title",
             key: 2
           },
@@ -471,8 +476,6 @@ const updateSearch = function(searchString) {
 
       renderAll(searchString);
   }
-
-
 };
 
 const reqListener = function() {
@@ -489,8 +492,6 @@ const reqListener = function() {
     });
   });
 
-  console.log(tags);
-
   // Build search index
   idx = lunr(function() {
     this.ref("id");
@@ -503,7 +504,6 @@ const reqListener = function() {
     }, this);
   });
 
-
   // Check for URL search string
   const searchParams = new URLSearchParams(window.location.search.substring(1));
 
@@ -513,8 +513,6 @@ const reqListener = function() {
   } else {
   renderAll();   
   }
-
- 
 };
 
 const oReq = new XMLHttpRequest();
