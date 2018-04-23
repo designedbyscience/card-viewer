@@ -22,15 +22,15 @@ class App extends React.Component {
     this.handleMouseUp = this.handleMouseUp.bind(this);
     this.handleKeyUp = this.handleKeyUp.bind(this);
   }
-  
+
   componentWillMount() {
-      document.addEventListener("keyup", this.handleKeyUp)
+    document.addEventListener("keyup", this.handleKeyUp);
   }
-  
+
   componentWillUnmount() {
-      document.removeEventListener("keyup", this.handleKeyUp)
-  }  
-  
+    document.removeEventListener("keyup", this.handleKeyUp);
+  }
+
   handleMouseUp(index) {
     if (this.state && this.state.peeking && !this.state.open) {
       this.setState({
@@ -51,49 +51,61 @@ class App extends React.Component {
       peeking: peeking
     });
   }
-  
+
   handleKeyUp(e) {
-      if (e.code == "KeyS" && e.altKey) {
-          if (window.getSelection().toString() != "") {
-              updateSearch(window.getSelection().toString());
-          }
-      } else if (e.code == "Escape" ) {
-          this.setState({open: false});
-      } 
-
-      const getNextId = function (list, id) {
-        let currentIndex = list.findIndex( n => {return id == n.id});
-        return currentIndex == 0 ? list[list.length - 1].id : list[currentIndex - 1].id;
+    if (e.code == "KeyS" && e.altKey) {
+      if (window.getSelection().toString() != "") {
+        updateSearch(window.getSelection().toString());
       }
+    } else if (e.code == "Escape") {
+      this.setState({ open: false });
+    }
 
-      const getPreviousId = function (list, id) {
-        let currentIndex = list.findIndex( n => {return id == n.id});
-        return currentIndex == list.length-1 ? list[0].id : list[currentIndex + 1].id;
-      }      
+    const getNextId = function(list, id) {
+      let currentIndex = list.findIndex(n => {
+        return id == n.id;
+      });
+      return currentIndex == 0
+        ? list[list.length - 1].id
+        : list[currentIndex - 1].id;
+    };
 
-      const updateCardOpenState = (function (directionFunction) {
-            if (this.state.starredOpen) {
-              this.setState({open: directionFunction(this.props.starredNotes, this.state.open)});
-            }
-            else if (this.props.searchResultNotes){
-              this.setState({ open: directionFunction(this.props.searchResultNotes, this.state.open)});            }
-            else {
-               this.setState({open: directionFunction(this.props.notes, this.state.open)});
-            }
+    const getPreviousId = function(list, id) {
+      let currentIndex = list.findIndex(n => {
+        return id == n.id;
+      });
+      return currentIndex == list.length - 1
+        ? list[0].id
+        : list[currentIndex + 1].id;
+    };
 
-      }).bind(this);
-
-      if (this.state && this.state.open !== false) {
-        if (e.code == "ArrowLeft" || e.key == "UIKeyInputLeftArrow") {
-            updateCardOpenState(getNextId);
-        } else if (e.code == "ArrowRight" || e.key == "UIKeyInputRightArrow") {
-           updateCardOpenState(getPreviousId);
-        } else if (e.code == "ArrowUp" || e.key == "UIKeyInputUpArrow") {
-          updateStarred(this.state.open);
-        } else if (e.code == "ArrowDown" || e.key == "UIKeyInputDownArrow") {
-          this.setState({open: false});
-        }
+    const updateCardOpenState = function(directionFunction) {
+      if (this.state.starredOpen) {
+        this.setState({
+          open: directionFunction(this.props.starredNotes, this.state.open)
+        });
+      } else if (this.props.searchResultNotes) {
+        this.setState({
+          open: directionFunction(this.props.searchResultNotes, this.state.open)
+        });
+      } else {
+        this.setState({
+          open: directionFunction(this.props.notes, this.state.open)
+        });
       }
+    }.bind(this);
+
+    if (this.state && this.state.open !== false) {
+      if (e.code == "ArrowLeft" || e.key == "UIKeyInputLeftArrow") {
+        updateCardOpenState(getNextId);
+      } else if (e.code == "ArrowRight" || e.key == "UIKeyInputRightArrow") {
+        updateCardOpenState(getPreviousId);
+      } else if (e.code == "ArrowUp" || e.key == "UIKeyInputUpArrow") {
+        updateStarred(this.state.open);
+      } else if (e.code == "ArrowDown" || e.key == "UIKeyInputDownArrow") {
+        this.setState({ open: false });
+      }
+    }
   }
 
   render() {
@@ -109,11 +121,16 @@ class App extends React.Component {
         peeking: this.state.peeking,
         key: 2
       }),
-      React.createElement(Search, { key: 3, searchString: this.props.searchString }),
+      React.createElement(Search, {
+        key: 3,
+        searchString: this.props.searchString
+      }),
       React.createElement(CardList, {
         handleOpen: this.handleOpen.bind(this),
         searchResult: this.props.searchResult,
-        notes: this.props.searchResult ? this.props.searchResultNotes : this.props.notes,
+        notes: this.props.searchResult
+          ? this.props.searchResultNotes
+          : this.props.notes,
         peeking: this.state.peeking,
         key: 4
       })
@@ -126,11 +143,11 @@ class OpenCard extends React.Component {
     super(props);
 
     this.handleClick = this.handleClick.bind(this);
-    this.handleMouseup = this.handleMouseup.bind(this);    
+    this.handleMouseup = this.handleMouseup.bind(this);
   }
 
   handleMouseup(e) {
-     e.stopPropagation();
+    e.stopPropagation();
   }
 
   handleClick(e) {
@@ -139,23 +156,27 @@ class OpenCard extends React.Component {
 
   render() {
     if (this.props.note) {
-      return React.createElement("div", { onMouseUp: this.handleMouseup, className: "card-open" }, [
-        React.createElement(
-          CardStar,
-          { index: this.props.note.id, key: 1 },
-          null
-        ),
-        React.createElement(
-          "h2",
-          { onClick: this.handleClick, className: "title", key: 2 },
-          this.props.note.title
-        ),
-        React.createElement(reactMarkdown, {
-          className: "content",
-          key: 4,
-          source: this.props.note.contentmarkdown
-        })
-      ]);
+      return React.createElement(
+        "div",
+        { onMouseUp: this.handleMouseup, className: "card-open" },
+        [
+          React.createElement(
+            CardStar,
+            { index: this.props.note.id, key: 1 },
+            null
+          ),
+          React.createElement(
+            "h2",
+            { onClick: this.handleClick, className: "title", key: 2 },
+            this.props.note.title
+          ),
+          React.createElement(reactMarkdown, {
+            className: "content",
+            key: 4,
+            source: this.props.note.contentmarkdown
+          })
+        ]
+      );
     }
 
     return null;
@@ -167,11 +188,10 @@ class Search extends React.Component {
     super(props);
 
     if (props.searchString) {
-   this.state = { value: props.searchString};
+      this.state = { value: props.searchString };
     } else {
-    this.state = { value: ""};     
+      this.state = { value: "" };
     }
- 
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -187,12 +207,12 @@ class Search extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-      this.setState({
-          value: nextProps.searchString
-      })
+    this.setState({
+      value: nextProps.searchString
+    });
   }
 
-  render() {        
+  render() {
     return React.createElement(
       "form",
       { onSubmit: this.handleSubmit },
@@ -226,38 +246,38 @@ class CardStar extends React.Component {
 }
 
 class CardTag extends React.Component {
-    constructor(props) {
-        super(props);
+  constructor(props) {
+    super(props);
 
-        this.handleClick = this.handleClick.bind(this);        
-    }
-    
-    handleClick(e) {
-      updateSearch(this.props.tagName);
-    }    
-    
-    render() {
-        let style = {
-          backgroundColor: colorstops[tags.indexOf(this.props.tagName) % colorstops.length]
-        };
-        
-        return React.createElement("span", {style: style, onClick: this.handleClick, className: "tag"}, this.props.tagName)
-    }
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick(e) {
+    updateSearch(this.props.tagName);
+  }
+
+  render() {
+    let style = {
+      backgroundColor:
+        colorstops[tags.indexOf(this.props.tagName) % colorstops.length]
+    };
+
+    return React.createElement(
+      "span",
+      { style: style, onClick: this.handleClick, className: "tag" },
+      this.props.tagName
+    );
+  }
 }
-
+ 
 class CardTags extends React.Component {
-
   render() {
     if (this.props.tags) {
       let children = this.props.tags.map((t, index) => {
-
-        return React.createElement(
-          CardTag,
-          {
-            key: index,
-            tagName: t
-          }
-        );
+        return React.createElement(CardTag, {
+          key: index,
+          tagName: t
+        });
       });
 
       return React.createElement(
@@ -277,18 +297,17 @@ class Card extends React.Component {
 
     this.handleMousedown = this.handleMousedown.bind(this);
     this.handleMouseup = this.handleMouseup.bind(this);
-    this.handleTouchEnd = this.handleTouchEnd.bind(this);    
+    this.handleTouchEnd = this.handleTouchEnd.bind(this);
   }
 
   handleMousedown(e) {
     if (e.altKey) {
       this.props.handleOpen(this.props.note.id, true);
-
     }
   }
 
-  handleMouseup() {
-    if (!this.props.peeking) {
+  handleMouseup(e) {
+    if (!this.props.peeking && e.button === 0) {
       this.props.handleOpen(this.props.note.id);
     }
   }
@@ -336,7 +355,7 @@ class Card extends React.Component {
         React.createElement(
           "div",
           { className: "content", key: 4 },
-          this.props.note.content
+          this.props.note.contentmarkdown
         )
       ])
     );
@@ -398,8 +417,10 @@ let colorstops = [
 ];
 
 const noteById = function(id) {
-  return notes.find(n => {return n.id == id});
-}
+  return notes.find(n => {
+    return n.id == id;
+  });
+};
 
 const renderAll = function(searchString = "", searchResultNotes = false) {
   let starredNotes = notes.filter(n => {
@@ -436,45 +457,42 @@ const updateSearch = function(searchString) {
 
     if (pastResult) {
       pastResult.forEach(r => {
-
         noteById(r.ref).searchResult = { score: 0 };
       });
     }
 
-    let searchResultNotes = result.map( r => {
+    let searchResultNotes = result.map(r => {
       let n = noteById(r.ref);
       n.searchResult = r;
       return n;
-
     });
 
     pastResult = result;
 
-      searchResultNotes.sort((a, b) => {
-        if (a.searchResult.score > b.searchResult.score) {
-          return -1;
-        } else if ( a.searchResult.score < b.searchResult.score ) {
-          return 1;
-        }
+    searchResultNotes.sort((a, b) => {
+      if (a.searchResult.score > b.searchResult.score) {
+        return -1;
+      } else if (a.searchResult.score < b.searchResult.score) {
+        return 1;
+      }
 
-        return 0;
-      });
-  
-      renderAll(searchString, searchResultNotes);
+      return 0;
+    });
 
+    renderAll(searchString, searchResultNotes);
   } else {
     searchResult = false;
     notes.sort((a, b) => {
-        if (a.title < b.title) {
-          return -1;
-        } else if ( a.title > b.title ) {
-          return 1;
-        }
+      if (a.title < b.title) {
+        return -1;
+      } else if (a.title > b.title) {
+        return 1;
+      }
 
-        return 0;
+      return 0;
     });
 
-      renderAll(searchString);
+    renderAll(searchString);
   }
 };
 
@@ -508,10 +526,9 @@ const reqListener = function() {
   const searchParams = new URLSearchParams(window.location.search.substring(1));
 
   if (searchParams.has("q")) {
-    
     updateSearch(searchParams.get("q"));
   } else {
-  renderAll();   
+    renderAll();
   }
 };
 
