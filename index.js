@@ -47,7 +47,7 @@ class App extends React.Component {
   handleOpen(id, peeking) {
     this.setState({
       open: this.state.open !== id ? id : false,
-      starredOpen: noteById(id).starred,
+      starredOpen: app.noteById(id).starred,
       peeking: peeking
     });
   }
@@ -55,7 +55,7 @@ class App extends React.Component {
   handleKeyUp(e) {
     if (e.code == "KeyS" && e.altKey) {
       if (window.getSelection().toString() != "") {
-        updateSearch(window.getSelection().toString());
+        app.updateSearch(window.getSelection().toString());
       }
     } else if (e.code == "Escape") {
       this.setState({ open: false });
@@ -98,12 +98,16 @@ class App extends React.Component {
     if (this.state && this.state.open !== false) {
       if (e.code == "ArrowLeft" || e.key == "UIKeyInputLeftArrow") {
         updateCardOpenState(getNextId);
+
       } else if (e.code == "ArrowRight" || e.key == "UIKeyInputRightArrow") {
         updateCardOpenState(getPreviousId);
+
       } else if (e.code == "ArrowUp" || e.key == "UIKeyInputUpArrow") {
-        updateStarred(this.state.open);
+        app.updateStarred(this.state.open);
+
       } else if (e.code == "ArrowDown" || e.key == "UIKeyInputDownArrow") {
         this.setState({ open: false });
+
       }
     }
   }
@@ -183,6 +187,52 @@ class OpenCard extends React.Component {
   }
 }
 
+class SearchQueueItem extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    this.setState({ linethrough: true });
+
+    this.props.handleClick(this.props.content);
+  }
+
+  render() {
+    return React.createElement(
+      "li",
+      {
+        className: this.state && this.state.linethrough ? "done" : "",
+        onClick: this.handleClick
+      },
+      this.props.content
+    );
+  }
+}
+
+class SearchQueue extends React.Component {
+  render() {
+    let queueElements = null;
+
+    if (this.props.queue) {
+      queueElements = this.props.queue.map(q => {
+        return React.createElement(SearchQueueItem, {
+          content: q,
+          handleClick: this.props.handleItemClick
+        });
+      });
+    }
+
+    return React.createElement(
+      "ul",
+      { className: "searchqueue" },
+      queueElements
+    );
+  }
+}
+
 class Search extends React.Component {
   constructor(props) {
     super(props);
@@ -195,15 +245,34 @@ class Search extends React.Component {
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.handlePaste = this.handlePaste.bind(this);
   }
 
   handleSubmit(e) {
     e.preventDefault();
-    updateSearch(this.state.value);
+    app.updateSearch(this.state.value);
   }
 
   handleChange(e) {
     this.setState({ value: e.target.value });
+  }
+
+  handleItemClick(q) {
+    app.updateSearch(q);
+  }
+
+  handlePaste(e) {
+    let clipboardText = e.clipboardData.getData("text");
+    let queue;
+
+    if (clipboardText && clipboardText.match(/\n|\r/)) {
+      e.stopPropagation();
+      e.preventDefault();
+      queue = clipboardText.split("\n");
+
+      this.setState({ queue: queue });
+      updateSearch(queue[0]);
+    }
   }
 
   componentWillReceiveProps(nextProps) {
@@ -213,15 +282,22 @@ class Search extends React.Component {
   }
 
   render() {
-    return React.createElement(
-      "form",
-      { onSubmit: this.handleSubmit },
-      React.createElement("input", {
-        type: "search",
-        onChange: this.handleChange,
-        value: this.state.value
-      })
-    );
+    return React.createElement("div", {}, [
+      React.createElement(SearchQueue, {
+        queue: this.state.queue,
+        handleItemClick: this.handleItemClick
+      }),
+      React.createElement(
+        "form",
+        { onSubmit: this.handleSubmit },
+        React.createElement("input", {
+          type: "search",
+          onChange: this.handleChange,
+          onPaste: this.handlePaste,
+          value: this.state.value
+        })
+      )
+    ]);
   }
 }
 
@@ -233,7 +309,7 @@ class CardStar extends React.Component {
   }
 
   handleClick(e) {
-    updateStarred(this.props.index);
+    app.updateStarred(this.props.index);
   }
 
   render() {
@@ -249,17 +325,44 @@ class CardTag extends React.Component {
   constructor(props) {
     super(props);
 
+    this.colorstops = [
+      "hsl(10, 100%, 40%)",
+      "hsl(10, 100%, 50%)",
+      "hsl(10, 100%, 60%)",
+      "hsl(10, 100%, 70%)",
+      "hsl(10, 100%, 80%)",
+      "hsl(10, 100%, 90%)",
+      "hsl(80, 100%, 40%)",
+      "hsl(80, 100%, 50%)",
+      "hsl(80, 100%, 60%)",
+      "hsl(80, 100%, 70%)",
+      "hsl(80, 100%, 80%)",
+      "hsl(80, 100%, 90%)",
+      "hsl(170, 100%, 40%)",
+      "hsl(170, 100%, 50%)",
+      "hsl(170, 100%, 60%)",
+      "hsl(170, 100%, 70%)",
+      "hsl(170, 100%, 80%)",
+      "hsl(170, 100%, 90%)",
+      "hsl(215, 100%, 40%)",
+      "hsl(215, 100%, 50%)",
+      "hsl(215, 100%, 60%)",
+      "hsl(215, 100%, 70%)",
+      "hsl(215, 100%, 80%)",
+      "hsl(215, 100%, 90%)"
+    ];
+
     this.handleClick = this.handleClick.bind(this);
   }
 
   handleClick(e) {
-    updateSearch(this.props.tagName);
+    app.updateSearch(this.props.tagName);
   }
 
   render() {
     let style = {
       backgroundColor:
-        colorstops[tags.indexOf(this.props.tagName) % colorstops.length]
+        this.colorstops[app.tags.indexOf(this.props.tagName) % this.colorstops.length]
     };
 
     return React.createElement(
@@ -269,7 +372,7 @@ class CardTag extends React.Component {
     );
   }
 }
- 
+
 class CardTags extends React.Component {
   render() {
     if (this.props.tags) {
@@ -317,12 +420,6 @@ class Card extends React.Component {
   }
 
   render() {
-    let propsClassnames = classNameBuilder({
-      card: true,
-      visible: !this.props.hidden,
-      open: this.props.open
-    });
-
     // let tokenMatch = "";
     //
     // if (this.props.note.searchResult && this.props.note.searchResult.score > 0) {
@@ -332,7 +429,7 @@ class Card extends React.Component {
     return React.createElement(
       "div",
       {
-        className: propsClassnames
+          className: "card visible"
       },
       React.createElement(React.Fragment, null, [
         React.createElement(
@@ -372,9 +469,9 @@ class CardList extends React.Component {
         peeking: this.props.peeking
       };
 
-      if (this.props.searchResult) {
-        childProps.hidden = !n.searchResult || n.searchResult.score === 0;
-      }
+      // if (this.props.searchResult) {
+      //   childProps.hidden = !n.searchResult || n.searchResult.score === 0;
+      // }
 
       return React.createElement(Card, childProps);
     });
@@ -383,152 +480,133 @@ class CardList extends React.Component {
   }
 }
 
-let notes;
-let idx;
-let pastResult;
-let searchResult = false;
-let tags = [];
+let app;
 
-let colorstops = [
-  "hsl(10, 100%, 40%)",
-  "hsl(10, 100%, 50%)",
-  "hsl(10, 100%, 60%)",
-  "hsl(10, 100%, 70%)",
-  "hsl(10, 100%, 80%)",
-  "hsl(10, 100%, 90%)",
-  "hsl(80, 100%, 40%)",
-  "hsl(80, 100%, 50%)",
-  "hsl(80, 100%, 60%)",
-  "hsl(80, 100%, 70%)",
-  "hsl(80, 100%, 80%)",
-  "hsl(80, 100%, 90%)",
-  "hsl(170, 100%, 40%)",
-  "hsl(170, 100%, 50%)",
-  "hsl(170, 100%, 60%)",
-  "hsl(170, 100%, 70%)",
-  "hsl(170, 100%, 80%)",
-  "hsl(170, 100%, 90%)",
-  "hsl(215, 100%, 40%)",
-  "hsl(215, 100%, 50%)",
-  "hsl(215, 100%, 60%)",
-  "hsl(215, 100%, 70%)",
-  "hsl(215, 100%, 80%)",
-  "hsl(215, 100%, 90%)"
-];
+class Application {
+  constructor(notes) {
+    this.notes = notes;
+    this.tags = [];
 
-const noteById = function(id) {
-  return notes.find(n => {
-    return n.id == id;
-  });
-};
+    this.notes.forEach((n, index) => {
+      n.id = index;
+      n.searchResult = { score: 0 };
 
-const renderAll = function(searchString = "", searchResultNotes = false) {
-  let starredNotes = notes.filter(n => {
-    return n.starred;
-  });
-
-  ReactDOM.render(
-    React.createElement(App, {
-      searchResult: searchResult,
-      searchString: searchString,
-      starredNotes: starredNotes,
-      searchResultNotes: searchResultNotes,
-      notes: notes
-    }),
-    document.getElementById("root")
-  );
-};
-
-const updateStarred = function(index) {
-  let note = noteById(index);
-
-  note.starred = !note.starred;
-
-  renderAll();
-};
-
-const updateSearch = function(searchString) {
-  if (searchString !== "") {
-    searchResult = true;
-    let result = idx.search(searchString);
-
-    console.log(idx);
-    console.log(result);
-
-    if (pastResult) {
-      pastResult.forEach(r => {
-        noteById(r.ref).searchResult = { score: 0 };
+      n.tag.forEach(t => {
+        if (this.tags.indexOf(t) === -1) {
+          this.tags.push(t);
+        }
       });
-    }
-
-    let searchResultNotes = result.map(r => {
-      let n = noteById(r.ref);
-      n.searchResult = r;
-      return n;
     });
 
-    pastResult = result;
+    let tempNotes = this.notes;
 
-    searchResultNotes.sort((a, b) => {
-      if (a.searchResult.score > b.searchResult.score) {
-        return -1;
-      } else if (a.searchResult.score < b.searchResult.score) {
-        return 1;
-      }
+    this.idx = lunr(function() {
+      this.ref("id");
+      this.field("title");
+      this.field("content");
+      this.field("tag");
 
-      return 0;
+      tempNotes.forEach(function(n) {
+        this.add(n);
+      }, this);
     });
 
-    renderAll(searchString, searchResultNotes);
-  } else {
-    searchResult = false;
-    notes.sort((a, b) => {
-      if (a.title < b.title) {
-        return -1;
-      } else if (a.title > b.title) {
-        return 1;
-      }
-
-      return 0;
-    });
-
-    renderAll(searchString);
+    this.searchResult = false;
   }
-};
+
+  noteById(id) {
+    return this.notes.find(n => {
+      return n.id == id;
+    });
+  }
+
+  updateStarred(index) {
+    let note = this.noteById(index);
+
+    note.starred = !note.starred;
+
+    this.renderAll();
+  }
+
+  updateQueue(queue) {}
+
+  updateSearch(searchString) {
+    if (searchString !== "") {
+      this.searchResult = true;
+      let result = this.idx.search(searchString);
+
+      if (this.pastResult) {
+        this.pastResult.forEach(r => {
+          this.noteById(r.ref).searchResult = { score: 0 };
+        });
+      }
+
+      this.searchResultNotes = result.map(r => {
+        let n = this.noteById(r.ref);
+        n.searchResult = r;
+        return n;
+      });
+
+      this.pastResult = result;
+
+      this.searchResultNotes.sort((a, b) => {
+        if (a.searchResult.score > b.searchResult.score) {
+          return -1;
+        } else if (a.searchResult.score < b.searchResult.score) {
+          return 1;
+        }
+
+        return 0;
+      });
+
+      this.renderAll();
+    } else {
+      this.searchResult = false;
+      this.notes.sort((a, b) => {
+        if (a.title < b.title) {
+          return -1;
+        } else if (a.title > b.title) {
+          return 1;
+        }
+
+        return 0;
+      });
+
+      this.searchString = searchString;
+      this.renderAll();
+    }
+  }
+
+  renderAll() {
+    let starredNotes = this.notes.filter(n => {
+      return n.starred;
+    });
+
+    ReactDOM.render(
+      React.createElement(App, {
+        searchResult: this.searchResult,
+        searchString: this.searchString,
+        starredNotes: starredNotes,
+        searchResultNotes: this.searchResultNotes,
+        notes: this.notes
+      }),
+      document.getElementById("root")
+    );
+  }
+}
 
 const reqListener = function() {
-  notes = JSON.parse(this.response)["en-export"].note;
-
-  notes.forEach((n, index) => {
-    n.id = index;
-    n.searchResult = { score: 0 };
-
-    n.tag.forEach(t => {
-      if (tags.indexOf(t) === -1) {
-        tags.push(t);
-      }
-    });
-  });
-
-  // Build search index
-  idx = lunr(function() {
-    this.ref("id");
-    this.field("title");
-    this.field("content");
-    this.field("tag");
-
-    notes.forEach(function(n) {
-      this.add(n);
-    }, this);
-  });
+  app = new Application(JSON.parse(this.response)["en-export"].note);
 
   // Check for URL search string
   const searchParams = new URLSearchParams(window.location.search.substring(1));
 
   if (searchParams.has("q")) {
-    updateSearch(searchParams.get("q"));
+    app.updateSearch(searchParams.get("q"));
+  } else if (searchParams.has("queue")) {
+    app.updateQueue(decodeURI(searchParams.get("queue")));
   } else {
-    renderAll();
+    app.renderAll();
   }
 };
 
