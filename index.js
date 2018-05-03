@@ -119,7 +119,8 @@ class App extends React.Component {
         notes: this.props.starredNotes,
         handleOpen: this.handleOpen.bind(this),
         peeking: this.state.peeking,
-        key: 2
+        key: 2,
+        className: "starredcards"
       }),
       React.createElement(Search, {
         key: 3,
@@ -379,7 +380,15 @@ class CardList extends React.Component {
       return React.createElement(Card, childProps);
     });
 
-    return React.createElement("div", { className: "card-list" }, children);
+    let classNames = {
+      cardlist: true
+    }
+
+    if (this.props.className) {
+      classNames[this.props.className] = true;
+    }
+
+    return React.createElement("div", { className: classNameBuilder(classNames)}, children);
   }
 }
 
