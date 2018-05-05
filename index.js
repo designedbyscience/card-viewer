@@ -98,16 +98,12 @@ class App extends React.Component {
     if (this.state && this.state.open !== false) {
       if (e.code == "ArrowLeft" || e.key == "UIKeyInputLeftArrow") {
         updateCardOpenState(getNextId);
-
       } else if (e.code == "ArrowRight" || e.key == "UIKeyInputRightArrow") {
         updateCardOpenState(getPreviousId);
-
       } else if (e.code == "ArrowUp" || e.key == "UIKeyInputUpArrow") {
         app.updateStarred(this.state.open);
-
       } else if (e.code == "ArrowDown" || e.key == "UIKeyInputDownArrow") {
         this.setState({ open: false });
-
       }
     }
   }
@@ -115,7 +111,7 @@ class App extends React.Component {
   render() {
     return React.createElement("div", { onMouseUp: this.handleMouseUp }, [
       React.createElement(OpenCard, {
-        note: this.props.notes[this.state.open],
+        note: this.state.open ? app.noteById(this.state.open) : false,
         handleOpen: this.handleOpen.bind(this),
         key: 1
       }),
@@ -128,7 +124,8 @@ class App extends React.Component {
       }),
       React.createElement(Search, {
         key: 3,
-        searchString: this.props.searchString
+        searchString: this.props.searchString,
+        queue: this.props.queue
       }),
       React.createElement(CardList, {
         handleOpen: this.handleOpen.bind(this),
@@ -271,8 +268,8 @@ class Search extends React.Component {
       e.preventDefault();
       queue = clipboardText.split("\n");
 
-      this.setState({ queue: queue });
-      updateSearch(queue[0]);
+      app.updateQueue(queue);
+      app.updateSearch(queue[0]);
     }
   }
 
@@ -285,7 +282,7 @@ class Search extends React.Component {
   render() {
     return React.createElement("div", {}, [
       React.createElement(SearchQueue, {
-        queue: this.state.queue,
+        queue: this.props.queue,
         handleItemClick: this.handleItemClick
       }),
       React.createElement(
@@ -362,8 +359,9 @@ class CardTag extends React.Component {
 
   render() {
     let style = {
-      backgroundColor:
-        this.colorstops[app.tags.indexOf(this.props.tagName) % this.colorstops.length]
+      backgroundColor: this.colorstops[
+        app.tags.indexOf(this.props.tagName) % this.colorstops.length
+      ]
     };
 
     return React.createElement(
@@ -430,14 +428,9 @@ class Card extends React.Component {
     return React.createElement(
       "div",
       {
-          className: "card visible"
+        className: "card visible"
       },
       React.createElement(React.Fragment, null, [
-        React.createElement(
-          CardStar,
-          { index: this.props.note.id, key: 1 },
-          null
-        ),
         React.createElement(
           "h2",
           {
@@ -448,6 +441,11 @@ class Card extends React.Component {
             key: 2
           },
           this.props.note.title
+        ),
+        React.createElement(
+          CardStar,
+          { index: this.props.note.id, key: 1 },
+          null
         ),
         React.createElement(CardTags, { tags: this.props.note.tag, key: 3 }),
         React.createElement(
@@ -479,13 +477,17 @@ class CardList extends React.Component {
 
     let classNames = {
       cardlist: true
-    }
+    };
 
     if (this.props.className) {
       classNames[this.props.className] = true;
     }
 
-    return React.createElement("div", { className: classNameBuilder(classNames)}, children);
+    return React.createElement(
+      "div",
+      { className: classNameBuilder(classNames) },
+      children
+    );
   }
 }
 
@@ -497,7 +499,7 @@ class Application {
     this.tags = [];
 
     this.notes.forEach((n, index) => {
-      n.id = index;
+      n.id = index + 1;
       n.searchResult = { score: 0 };
 
       n.tag.forEach(t => {
@@ -537,7 +539,10 @@ class Application {
     this.renderAll();
   }
 
-  updateQueue(queue) {}
+  updateQueue(queue) {
+    this.queue = queue;
+    this.renderAll();
+  }
 
   updateSearch(searchString) {
     if (searchString !== "") {
@@ -568,6 +573,7 @@ class Application {
         return 0;
       });
 
+      this.searchString = searchString;
       this.renderAll();
     } else {
       this.searchResult = false;
@@ -597,6 +603,7 @@ class Application {
         searchString: this.searchString,
         starredNotes: starredNotes,
         searchResultNotes: this.searchResultNotes,
+        queue: this.queue,
         notes: this.notes
       }),
       document.getElementById("root")
@@ -613,7 +620,7 @@ const reqListener = function() {
   if (searchParams.has("q")) {
     app.updateSearch(searchParams.get("q"));
   } else if (searchParams.has("queue")) {
-    app.updateQueue(decodeURI(searchParams.get("queue")));
+    app.updateQueue(searchParams.get("queue")).split("\n");
   } else {
     app.renderAll();
   }
