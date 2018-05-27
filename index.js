@@ -175,7 +175,7 @@ class OpenCard extends React.Component {
           React.createElement(reactMarkdown, {
             className: "content",
             key: 4,
-            source: this.props.note.contentmarkdown
+            source: this.props.note.content
           })
         ]
       );
@@ -451,7 +451,7 @@ class Card extends React.Component {
         React.createElement(
           "div",
           { className: "content", key: 4 },
-          this.props.note.contentmarkdown
+          this.props.note.content
         )
       ])
     );
@@ -612,7 +612,7 @@ class Application {
 }
 
 const reqListener = function() {
-  app = new Application(JSON.parse(this.response)["en-export"].note);
+  app = new Application(JSON.parse(this.response));
 
   // Check for URL search string
   const searchParams = new URLSearchParams(window.location.search.substring(1));
@@ -628,5 +628,6 @@ const reqListener = function() {
 
 const oReq = new XMLHttpRequest();
 oReq.addEventListener("load", reqListener);
-oReq.open("GET", "output.json");
+oReq.open("GET", dataURL);
+
 oReq.send();
