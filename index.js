@@ -163,15 +163,28 @@ class OpenCard extends React.Component {
         { onMouseUp: this.handleMouseup, className: "card-open" },
         [
           React.createElement(
-            CardStar,
-            { index: this.props.note.id, key: 1 },
-            null
+            "div",
+            {className: "card-title-container"},
+            [
+              React.createElement(
+                CardStar,
+                { index: this.props.note.id, key: 1 },
+                null
+              ), 
+              React.createElement(
+                "h2",
+                { onClick: this.handleClick, className: "title", key: 2 },
+                this.props.note.title
+              ),
+              React.createElement(
+                "a",
+                {onClick: this.handleClick},
+                "×"
+              )
+            ]
           ),
-          React.createElement(
-            "h2",
-            { onClick: this.handleClick, className: "title", key: 2 },
-            this.props.note.title
-          ),
+
+
           React.createElement(reactMarkdown, {
             className: "content",
             key: 4,
@@ -382,6 +395,8 @@ class CardTags extends React.Component {
         });
       });
 
+      children.push(this.props.children);
+
       return React.createElement(
         "div",
         { className: "card-tag-container" },
@@ -442,12 +457,11 @@ class Card extends React.Component {
           },
           this.props.note.title
         ),
-        React.createElement(
+        React.createElement(CardTags, { tags: this.props.note.tag, key: 3}, React.createElement(
           CardStar,
-          { index: this.props.note.id, key: 1 },
+          { index: this.props.note.id},
           null
-        ),
-        React.createElement(CardTags, { tags: this.props.note.tag, key: 3 }),
+        )),
         React.createElement(
           "div",
           { className: "content", key: 4 },
