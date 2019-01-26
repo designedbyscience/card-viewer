@@ -525,16 +525,19 @@ class Application {
 
     let tempNotes = this.notes;
 
-    this.idx = lunr(function() {
-      this.ref("id");
-      this.field("title");
-      this.field("content");
-      this.field("tag");
+    this.idx = elasticlunr(function() {
+      this.setRef("id");
+      this.addField("title");
+      this.addField("content");
+      this.addField("tag");
 
-      tempNotes.forEach(function(n) {
-        this.add(n);
-      }, this);
+
     });
+
+    tempNotes.forEach( n => {
+      this.idx.addDoc(n);
+    });
+
 
     this.searchResult = false;
   }
@@ -543,6 +546,12 @@ class Application {
     return this.notes.find(n => {
       return n.id == id;
     });
+  }
+
+  noteByTitle(title) {
+    return this.notes.find(n => {
+      return n.title == title;
+    })
   }
 
   updateStarred(index) {
@@ -635,6 +644,8 @@ const reqListener = function() {
     app.updateSearch(searchParams.get("q"));
   } else if (searchParams.has("queue")) {
     app.updateQueue(searchParams.get("queue")).split("\n");
+  } else if (searchParams.has("id")) {
+    app.openCard(app.noteByTitle(searchParams.get("id")))
   } else {
     app.renderAll();
   }
