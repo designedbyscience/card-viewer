@@ -37,11 +37,6 @@
                border-radius: 2px 2px 2px 2px;
             }
 
-            @media (min-width: 400px) {
-                .card {
-                    width: 48%;   
-                }
-            }
             
             @media (min-width: 600px) {
                 .card {
@@ -142,8 +137,8 @@
                 color: black;
             }
             
-            .card.open {
-                width: 30rem; 
+            /* .card.open { */
+                /* width: 30rem; 
                 position: fixed;
                 transform: translateX(-50%);
                 left: 50%;
@@ -154,9 +149,24 @@
             .card.open .content {
                 display: block;
             }
-            
+             */
             .card.visible {
                 display: block;
+            }
+
+
+            
+            @media (min-width: 400px) {
+                .card {
+                    width: 48%;   
+                }
+                .card-open {
+                    width: 100%; 
+                    position: fixed;
+                    /* transform: translateX(-50%); */
+                    left: 0;
+                    height: 100%;
+                }
             }
         </style>
     </head>
