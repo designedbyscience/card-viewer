@@ -16,7 +16,8 @@ class App extends React.Component {
     super(props);
 
     this.state = {
-      open: false
+      open: false,
+      grid: true
     };
 
     this.handleMouseUp = this.handleMouseUp.bind(this);
@@ -29,6 +30,14 @@ class App extends React.Component {
 
   componentWillUnmount() {
     document.removeEventListener("keyup", this.handleKeyUp);
+  }
+
+
+  handleToggleGridType(){
+    this.setState({
+      grid: !this.state.grid
+    });
+
   }
 
   handleMouseUp(index) {
@@ -109,6 +118,32 @@ class App extends React.Component {
   }
 
   render() {
+
+    let gridListComponent;
+
+    if (this.state.grid) {
+      gridListComponent = React.createElement(CardList, {
+        handleOpen: this.handleOpen.bind(this),
+        searchResult: this.props.searchResult,
+        notes: this.props.searchResult
+          ? this.props.searchResultNotes
+          : this.props.notes,
+        peeking: this.state.peeking,
+        key: 4
+      });
+    } else {
+      gridListComponent = React.createElement(Table, {
+        handleOpen: this.handleOpen.bind(this),
+        searchResult: this.props.searchResult,
+        notes: this.props.searchResult
+          ? this.props.searchResultNotes
+          : this.props.notes,
+        peeking: this.state.peeking,
+        key: 5
+      });
+    }
+
+
     return React.createElement("div", { onMouseUp: this.handleMouseUp }, [
       React.createElement(OpenCard, {
         note: this.state.open ? app.noteById(this.state.open) : false,
@@ -127,18 +162,99 @@ class App extends React.Component {
         searchString: this.props.searchString,
         queue: this.props.queue
       }),
-      React.createElement(CardList, {
-        handleOpen: this.handleOpen.bind(this),
-        searchResult: this.props.searchResult,
-        notes: this.props.searchResult
-          ? this.props.searchResultNotes
-          : this.props.notes,
-        peeking: this.state.peeking,
-        key: 4
-      })
+      React.createElement(GridTableSwitcher, {
+        handleGridSwitch: this.handleToggleGridType.bind(this)
+      }),
+      gridListComponent      
     ]);
   }
 }
+
+
+
+class GridTableSwitcher extends React.Component {
+  render() {
+    return React.createElement("div", {}, [
+      React.createElement("button", {onClick: this.props.handleGridSwitch}, "Grid"),
+      React.createElement("button", {onClick: this.props.handleGridSwitch}, "List"),
+    ]);
+  }
+}
+
+class TableRow extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick(e) {    
+      this.props.handleOpen(this.props.note.id, true);
+  }
+
+  render () {
+
+    let tagList = this.props.note.tag.map( (t) => {
+      return React.createElement(CardTag, {tagName: t})
+    })
+
+    return React.createElement("tr", {
+      onClick: this.handleClick
+    
+    }, [
+      React.createElement("td", {}, this.props.note.title),
+      React.createElement("td", {}, tagList) ]);
+  }
+}
+
+class Table extends React.Component {
+  constructor(props) {
+    super(props);
+
+
+  }
+
+  render () {
+
+    let children = this.props.notes.map((n, index) => {
+      let childProps = {
+        note: n,
+        key: index,
+        handleOpen: this.props.handleOpen
+      };
+
+      // if (this.props.searchResult) {
+      //   childProps.hidden = !n.searchResult || n.searchResult.score === 0;
+      // }
+
+      return React.createElement(TableRow, childProps);
+    });
+
+    let classNames = {
+      cardlist: true
+    };
+
+    if (this.props.className) {
+      classNames[this.props.className] = true;
+    }
+
+    return React.createElement(
+      "table",
+      { className: classNameBuilder(classNames) },
+      [
+        React.createElement("thead", {}, 
+          React.createElement("tr", {}, [
+            React.createElement("th", {}, "Recipe"),
+            React.createElement("th", {}, "Tags")
+          ])
+        ),
+        React.createElement("tbody", {}, children)
+      ]
+    );
+  }
+
+}
+
 
 class OpenCard extends React.Component {
   constructor(props) {
