@@ -32,7 +32,6 @@ class App extends React.Component {
     document.removeEventListener("keyup", this.handleKeyUp);
   }
 
-
   handleToggleGridType(){
     this.setState({
       grid: !this.state.grid
@@ -165,6 +164,7 @@ class App extends React.Component {
       React.createElement(GridTableSwitcher, {
         handleGridSwitch: this.handleToggleGridType.bind(this)
       }),
+      React.createElement(SortChooser, {sortOptions: this.props.sortOptions, key: 7}),
       gridListComponent      
     ]);
   }
@@ -175,10 +175,32 @@ class App extends React.Component {
 class GridTableSwitcher extends React.Component {
   render() {
     return React.createElement("div", {}, [
-      React.createElement("button", {onClick: this.props.handleGridSwitch}, "Grid"),
-      React.createElement("button", {onClick: this.props.handleGridSwitch}, "List"),
+      React.createElement("button", {onClick: this.props.handleGridSwitch, key: 1}, "Grid"),
+      React.createElement("button", {onClick: this.props.handleGridSwitch, key: 2}, "List"),
     ]);
   }
+}
+
+class SortChooser extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick(sortName) {
+    app.updateSort(sortName);
+  }
+
+  render() {
+    let children = this.props.sortOptions.map((so, index) => {
+      return React.createElement("button", {onClick: this.handleClick.bind(this, so.name), key: index}, so.name);
+
+    });
+
+    return React.createElement("div", {}, children)
+  }
+
 }
 
 class TableRow extends React.Component {
@@ -240,7 +262,7 @@ class Table extends React.Component {
 
     return React.createElement(
       "table",
-      { className: classNameBuilder(classNames) },
+      {  },
       [
         React.createElement("thead", {}, 
           React.createElement("tr", {}, [
@@ -403,9 +425,11 @@ class Search extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    this.setState({
-      value: nextProps.searchString
-    });
+    if (nextProps.searchString) {
+      this.setState({
+        value: nextProps.searchString
+      });
+    }    
   }
 
   render() {
@@ -656,6 +680,48 @@ class Application {
 
 
     this.searchResult = false;
+
+    this.sortOptions = [
+      {
+        name: "title",
+        compareFunction: (a,b) => {
+
+          if (a.title > b.title) {
+            return 1
+          } else if (a.title === b.title) {
+            return 0
+          } else {
+            return -1
+          }
+        }
+      },
+      {
+        name: "id",
+        compareFunction: (a,b) => {
+          return a.id - b.id;
+        }
+      },
+      {
+        name: "tag",
+        compareFunction: (a,b) => {
+          // Sort tag lists by name
+          a.tag.sort();
+          b.tag.sort();
+          // Sort by joined string
+          let joinedA = a.tag.join();
+          let joinedB = b.tag.join();
+
+          if (joinedA < joinedB) {
+            return 1;
+          } else if (joinedA == joinedB) {
+            return 0;
+          } else {
+            return -1;
+          }
+        }
+      }
+
+    ];
   }
 
   noteById(id) {
@@ -668,6 +734,12 @@ class Application {
     return this.notes.find(n => {
       return n.title == title;
     })
+  }
+
+  updateSort(sortName) {
+    let so = this.sortOptions.find((s) => {return sortName === s.name});
+    this.notes.sort(so.compareFunction);
+    this.renderAll();
   }
 
   updateStarred(index) {
@@ -742,6 +814,7 @@ class Application {
         searchString: this.searchString,
         starredNotes: starredNotes,
         searchResultNotes: this.searchResultNotes,
+        sortOptions: this.sortOptions,
         queue: this.queue,
         notes: this.notes
       }),
