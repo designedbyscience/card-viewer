@@ -171,9 +171,39 @@
                     width: 18%;   
                 }
             }
+
+
+            #help {
+                display: none;
+                position: fixed;
+                box-sizing: border-box;
+                width: 50%;
+                left: 25%;
+                top: 10%;
+                padding: 2rem;
+                background-color: white;
+                z-index: 100;
+            }
         </style>
     </head>
     <body>
+        <div id="help">
+
+            <h4>Card Navigation</h4>
+
+            Previous/Next Card: Left Arrow/Right Arrow<br>
+            Add Card to Starred Group: Up Arrow<br>
+            Close open card: Escape or Down Arrow<br>
+
+
+            Cycle between Grid/List views: g<br>
+            Peeking: Alt + Click<br>
+            Search for selected text: Option s
+            <h4>Search Queue</h4>
+
+            
+
+        </div>
         <div id="root"></div>
         <!-- <script src="https://unpkg.com/lunr/lunr.js"></script>    -->
         <script src="https://unpkg.com/elasticlunr@0.9.5/elasticlunr.js"></script>      

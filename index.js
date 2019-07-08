@@ -20,16 +20,19 @@ class App extends React.Component {
       grid: true
     };
 
+
     this.handleMouseUp = this.handleMouseUp.bind(this);
     this.handleKeyUp = this.handleKeyUp.bind(this);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
   }
 
   componentWillMount() {
     document.addEventListener("keyup", this.handleKeyUp);
+    document.addEventListener("keydown", this.handleKeyDown);
   }
 
   componentWillUnmount() {
-    document.removeEventListener("keyup", this.handleKeyUp);
+    document.removeEventListener("keydown", this.handleKeyDown);
   }
 
   handleToggleGridType(){
@@ -60,7 +63,27 @@ class App extends React.Component {
     });
   }
 
+  handleKeyDown(e) {
+    if ((e.code == "MetaLeft" || e.code == "MetaRight") && !this.activeTimer) {
+      // set timer that will be cancelled by keyup
+      this.activeTimer = true;
+      this.helpTimer = setInterval(this.showHelp, 3000);
+    }
+  }
+
+  showHelp() {
+    document.querySelector("#help").style.display = "block";
+  }
+
+  hideHelp() {
+    document.querySelector("#help").style.display = "none";
+  }
+
   handleKeyUp(e) {
+    clearInterval(this.helpTimer);
+    this.activeTimer = false;
+    this.hideHelp();
+
     if (e.code == "KeyS" && e.altKey) {
       if (window.getSelection().toString() != "") {
         app.updateSearch(window.getSelection().toString());
@@ -220,12 +243,11 @@ class TableRow extends React.Component {
       return React.createElement(CardTag, {tagName: t})
     })
 
-    return React.createElement("tr", {
-      onClick: this.handleClick
-    
-    }, [
-      React.createElement("td", {}, this.props.note.title),
-      React.createElement("td", {}, tagList) ]);
+    return React.createElement("tr", {}, [
+      React.createElement("td", {}, React.createElement(CardStar, { index: this.props.note.id})),
+      React.createElement("td", { onClick: this.handleClick}, this.props.note.title),
+      React.createElement("td", {}, tagList)
+      ]);
   }
 }
 
@@ -266,6 +288,7 @@ class Table extends React.Component {
       [
         React.createElement("thead", {}, 
           React.createElement("tr", {}, [
+            React.createElement("th", {}),
             React.createElement("th", {}, "Recipe"),
             React.createElement("th", {}, "Tags")
           ])
@@ -276,7 +299,6 @@ class Table extends React.Component {
   }
 
 }
-
 
 class OpenCard extends React.Component {
   constructor(props) {
