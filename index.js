@@ -26,7 +26,7 @@ class App extends React.Component {
     this.handleKeyDown = this.handleKeyDown.bind(this);
   }
 
-  componentWillMount() {
+  componentDidMount() {
     document.addEventListener("keyup", this.handleKeyUp);
     document.addEventListener("keydown", this.handleKeyDown);
   }
@@ -35,11 +35,18 @@ class App extends React.Component {
     document.removeEventListener("keydown", this.handleKeyDown);
   }
 
+  showHelp() {
+    document.querySelector("#help").style.display = "block";
+  }
+
+  hideHelp() {
+    document.querySelector("#help").style.display = "none";
+  }
+
   handleToggleGridType(){
     this.setState({
       grid: !this.state.grid
     });
-
   }
 
   handleMouseUp(index) {
@@ -69,14 +76,10 @@ class App extends React.Component {
       this.activeTimer = true;
       this.helpTimer = setInterval(this.showHelp, 3000);
     }
-  }
 
-  showHelp() {
-    document.querySelector("#help").style.display = "block";
-  }
-
-  hideHelp() {
-    document.querySelector("#help").style.display = "none";
+    if (this.state && this.state.open !== false && (e.code == "ArrowDown" || e.key == "UIKeyInputDownArrow")) {
+        e.preventDefault(); 
+    }
   }
 
   handleKeyUp(e) {
@@ -90,6 +93,10 @@ class App extends React.Component {
       }
     } else if (e.code == "Escape") {
       this.setState({ open: false });
+    } else if (e.code == "KeyG") {
+      this.setState({
+        grid: !this.state.grid
+      })
     }
 
     const getNextId = function(list, id) {
@@ -134,6 +141,7 @@ class App extends React.Component {
       } else if (e.code == "ArrowUp" || e.key == "UIKeyInputUpArrow") {
         app.updateStarred(this.state.open);
       } else if (e.code == "ArrowDown" || e.key == "UIKeyInputDownArrow") {
+        e.preventDefault();
         this.setState({ open: false });
       }
     }

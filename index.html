@@ -37,9 +37,6 @@
                border-radius: 2px 2px 2px 2px;
             }
 
-            
-
-
             .searchqueue {
                 position: relative;
                 left: 25%;
@@ -79,9 +76,7 @@
             
             .card-open {
                 position: fixed;
-                width: 75%;
-                max-width: 1000px;
-                left: 12.5%;
+                width: 100%;
                 background: white;
                 height: 80%;
                 z-index: 100;
@@ -127,48 +122,39 @@
                 color: black;
             }
             
-            /* .card.open { */
-                /* width: 30rem; 
-                position: fixed;
-                transform: translateX(-50%);
-                left: 50%;
-                max-height: 70%;
-
-            }
-            
-            .card.open .content {
-                display: block;
-            }
-             */
             .card.visible {
                 display: block;
             }
-
-
             
             @media (min-width: 400px) {
                 .card {
                     width: 48%;   
                 }
                 .card-open {
-                    width: 100%; 
-                    position: fixed;
-                    /* transform: translateX(-50%); */
                     left: 0;
                     height: 100%;
                 }
             }
 
-
             @media (min-width: 600px) {
                 .card {
                     width: 23%;   
+                }
+
+                .card-open {
+                    height: 100%;
                 }
             }
 
             @media (min-width: 1000px) {
                 .card {
                     width: 18%;   
+                }
+
+                .card-open {
+                    width: 75%;
+                    left: 12.5%;
+                    max-width: 1000px;
                 }
             }
 
