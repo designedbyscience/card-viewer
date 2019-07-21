@@ -17,7 +17,8 @@ class App extends React.Component {
 
     this.state = {
       open: false,
-      grid: true
+      grid: true,
+      focussedNote: 1
     };
 
 
@@ -65,6 +66,7 @@ class App extends React.Component {
   handleOpen(id, peeking) {
     this.setState({
       open: this.state.open !== id ? id : false,
+      focussedNote: this.state.open !== id ? id : this.state.focussedNote,
       starredOpen: app.noteById(id).starred,
       peeking: peeking
     });
@@ -128,7 +130,8 @@ class App extends React.Component {
         });
       } else {
         this.setState({
-          open: directionFunction(this.props.notes, this.state.open)
+          open: directionFunction(this.props.notes, this.state.open),
+          focussedNote: directionFunction(this.props.notes, this.state.open)
         });
       }
     }.bind(this);
@@ -145,34 +148,43 @@ class App extends React.Component {
         this.setState({ open: false });
       }
     }
+
+    if (this.state && this.state.open === false) {
+      if (e.code == "ArrowLeft" || e.key == "UIKeyInputLeftArrow") {
+        this.setState({
+          focussedNote: getNextId(this.props.notes, this.state.focussedNote)
+        });
+      } else if (e.code == "ArrowRight" || e.key == "UIKeyInputRightArrow") {
+        this.setState({
+          focussedNote: getPreviousId(this.props.notes, this.state.focussedNote)
+        });
+      } else if (e.code == "ArrowUp" || e.key == "UIKeyInputUpArrow") {
+        this.setState({open: this.state.focussedNote});
+      } 
+    }
+
   }
 
   render() {
 
     let gridListComponent;
 
-    if (this.state.grid) {
-      gridListComponent = React.createElement(CardList, {
-        handleOpen: this.handleOpen.bind(this),
-        searchResult: this.props.searchResult,
-        notes: this.props.searchResult
-          ? this.props.searchResultNotes
-          : this.props.notes,
-        peeking: this.state.peeking,
-        key: 4
-      });
-    } else {
-      gridListComponent = React.createElement(Table, {
-        handleOpen: this.handleOpen.bind(this),
-        searchResult: this.props.searchResult,
-        notes: this.props.searchResult
-          ? this.props.searchResultNotes
-          : this.props.notes,
-        peeking: this.state.peeking,
-        key: 5
-      });
-    }
+    let gridListProps = {
+      handleOpen: this.handleOpen.bind(this),
+      searchResult: this.props.searchResult,
+      focussedNote: this.state.focussedNote,
+      notes: this.props.searchResult
+        ? this.props.searchResultNotes
+        : this.props.notes,
+      peeking: this.state.peeking,
+      key: 4
+    };
 
+    if (this.state.grid) {
+      gridListComponent = React.createElement(CardList, gridListProps);
+    } else {
+      gridListComponent = React.createElement(Table, gridListProps);
+    }
 
     return React.createElement("div", { onMouseUp: this.handleMouseUp }, [
       React.createElement(OpenCard, {
@@ -200,8 +212,6 @@ class App extends React.Component {
     ]);
   }
 }
-
-
 
 class GridTableSwitcher extends React.Component {
   render() {
@@ -231,13 +241,13 @@ class SortChooser extends React.Component {
 
     return React.createElement("div", {}, children)
   }
-
 }
 
 class TableRow extends React.Component {
   constructor(props) {
     super(props);
 
+    this.block = React.createRef();
     this.handleClick = this.handleClick.bind(this);
   }
 
@@ -245,13 +255,29 @@ class TableRow extends React.Component {
       this.props.handleOpen(this.props.note.id, true);
   }
 
-  render () {
+  shouldComponentUpdate(nextProps, nextState) {
+    return (this.props.hasFocus != nextProps.hasFocus || this.props.peeking != nextProps.peeking)
+  }
 
+  componentDidUpdate(prevProps, prevState) {
+    this.block.current.scrollIntoView({"block": "nearest"});
+  }
+
+  render () {
     let tagList = this.props.note.tag.map( (t) => {
       return React.createElement(CardTag, {tagName: t})
     })
 
-    return React.createElement("tr", {}, [
+
+
+    let classNames = {};
+
+    
+    classNames["focus"] = this.props.hasFocus;
+    
+
+
+    return React.createElement("tr", {ref: this.block, className: classNameBuilder(classNames)}, [
       React.createElement("td", {}, React.createElement(CardStar, { index: this.props.note.id})),
       React.createElement("td", { onClick: this.handleClick}, this.props.note.title),
       React.createElement("td", {}, tagList)
@@ -260,35 +286,26 @@ class TableRow extends React.Component {
 }
 
 class Table extends React.Component {
-  constructor(props) {
-    super(props);
-
-
-  }
-
   render () {
-
+    let focussedNote = this.props.focussedNote;
     let children = this.props.notes.map((n, index) => {
       let childProps = {
+        hasFocus: focussedNote === n.id,
         note: n,
         key: index,
         handleOpen: this.props.handleOpen
       };
 
-      // if (this.props.searchResult) {
-      //   childProps.hidden = !n.searchResult || n.searchResult.score === 0;
-      // }
-
       return React.createElement(TableRow, childProps);
     });
 
-    let classNames = {
-      cardlist: true
-    };
+    // let classNames = {
+    //   cardlist: true
+    // };
 
-    if (this.props.className) {
-      classNames[this.props.className] = true;
-    }
+    // if (this.props.className) {
+    //   classNames[this.props.className] = true;
+    // }
 
     return React.createElement(
       "table",
@@ -351,7 +368,6 @@ class OpenCard extends React.Component {
               )
             ]
           ),
-
 
           React.createElement(reactMarkdown, {
             className: "content",
@@ -582,9 +598,18 @@ class Card extends React.Component {
   constructor(props) {
     super(props);
 
+    this.block = React.createRef();
     this.handleMousedown = this.handleMousedown.bind(this);
     this.handleMouseup = this.handleMouseup.bind(this);
     this.handleTouchEnd = this.handleTouchEnd.bind(this);
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return (this.props.hasFocus != nextProps.hasFocus || this.props.peeking != nextProps.peeking)
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    this.block.current.scrollIntoView({"block": "nearest"});
   }
 
   handleMousedown(e) {
@@ -604,18 +629,23 @@ class Card extends React.Component {
   }
 
   render() {
-    // let tokenMatch = "";
-    //
-    // if (this.props.note.searchResult && this.props.note.searchResult.score > 0) {
-    //     tokenMatch = Object.keys(this.props.note.searchResult.matchData.metadata).toString();
-    // }
+
+    let classNames = {
+      card: true,
+      visible: true
+    };
+
+    if (this.props.hasFocus) {
+      classNames["focus"] = true;
+    }
 
     return React.createElement(
       "div",
       {
-        className: "card visible"
+        className: classNameBuilder(classNames),
+        ref: this.block
       },
-      React.createElement(React.Fragment, null, [
+      [
         React.createElement(
           "h2",
           {
@@ -637,24 +667,22 @@ class Card extends React.Component {
           { className: "content", key: 4 },
           this.props.note.content
         )
-      ])
+      ]
     );
   }
 }
 
 class CardList extends React.Component {
   render() {
+    let focussedNote = this.props.focussedNote;
     let children = this.props.notes.map((n, index) => {
       let childProps = {
+        hasFocus: focussedNote === n.id,
         note: n,
         key: index,
         handleOpen: this.props.handleOpen,
         peeking: this.props.peeking
       };
-
-      // if (this.props.searchResult) {
-      //   childProps.hidden = !n.searchResult || n.searchResult.score === 0;
-      // }
 
       return React.createElement(Card, childProps);
     });
@@ -700,14 +728,11 @@ class Application {
       this.addField("title");
       this.addField("content");
       this.addField("tag");
-
-
     });
 
     tempNotes.forEach( n => {
       this.idx.addDoc(n);
     });
-
 
     this.searchResult = false;
 
@@ -750,7 +775,6 @@ class Application {
           }
         }
       }
-
     ];
   }
 
