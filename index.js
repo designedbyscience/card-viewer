@@ -186,6 +186,13 @@ class App extends React.Component {
       gridListComponent = React.createElement(Table, gridListProps);
     }
 
+    let gridOptions = React.createElement("div", {className: "grid-sort-options"}, [
+      React.createElement(GridTableSwitcher, {
+        handleGridSwitch: this.handleToggleGridType.bind(this)
+      }),
+      React.createElement(SortChooser, {sortOptions: this.props.sortOptions, key: 7})
+    ]);
+
     return React.createElement("div", { onMouseUp: this.handleMouseUp }, [
       React.createElement(OpenCard, {
         note: this.state.open ? app.noteById(this.state.open) : false,
@@ -204,10 +211,7 @@ class App extends React.Component {
         searchString: this.props.searchString,
         queue: this.props.queue
       }),
-      React.createElement(GridTableSwitcher, {
-        handleGridSwitch: this.handleToggleGridType.bind(this)
-      }),
-      React.createElement(SortChooser, {sortOptions: this.props.sortOptions, key: 7}),
+      gridOptions,
       gridListComponent      
     ]);
   }
@@ -236,10 +240,9 @@ class SortChooser extends React.Component {
   render() {
     let children = this.props.sortOptions.map((so, index) => {
       return React.createElement("button", {onClick: this.handleClick.bind(this, so.name), key: index}, so.name);
-
     });
 
-    return React.createElement("div", {}, children)
+    return React.createElement("div", {}, children);
   }
 }
 
@@ -255,12 +258,14 @@ class TableRow extends React.Component {
       this.props.handleOpen(this.props.note.id, true);
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    return (this.props.hasFocus != nextProps.hasFocus || this.props.peeking != nextProps.peeking)
-  }
+  // shouldComponentUpdate(nextProps, nextState) {
+  //   return (this.props.hasFocus != nextProps.hasFocus || this.props.peeking != nextProps.peeking)
+  // }
 
   componentDidUpdate(prevProps, prevState) {
-    this.block.current.scrollIntoView({"block": "nearest"});
+    if (this.props.hasFocus && !prevProps.hasFocus) {
+      this.block.current.scrollIntoView({"block": "nearest"});
+    }
   }
 
   render () {
@@ -268,15 +273,12 @@ class TableRow extends React.Component {
       return React.createElement(CardTag, {tagName: t})
     })
 
+    let classNames = {
+      "pointer": true
+    };
 
-
-    let classNames = {};
-
-    
     classNames["focus"] = this.props.hasFocus;
     
-
-
     return React.createElement("tr", {ref: this.block, className: classNameBuilder(classNames)}, [
       React.createElement("td", {}, React.createElement(CardStar, { index: this.props.note.id})),
       React.createElement("td", { onClick: this.handleClick}, this.props.note.title),
@@ -298,14 +300,6 @@ class Table extends React.Component {
 
       return React.createElement(TableRow, childProps);
     });
-
-    // let classNames = {
-    //   cardlist: true
-    // };
-
-    // if (this.props.className) {
-    //   classNames[this.props.className] = true;
-    // }
 
     return React.createElement(
       "table",
@@ -358,12 +352,12 @@ class OpenCard extends React.Component {
               ), 
               React.createElement(
                 "h2",
-                { onClick: this.handleClick, className: "title", key: 2 },
+                { onClick: this.handleClick, className: "title pointer", key: 2 },
                 this.props.note.title
               ),
               React.createElement(
                 "a",
-                {onClick: this.handleClick},
+                {onClick: this.handleClick, className: "pointer"},
                 "×"
               )
             ]
@@ -604,12 +598,10 @@ class Card extends React.Component {
     this.handleTouchEnd = this.handleTouchEnd.bind(this);
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    return (this.props.hasFocus != nextProps.hasFocus || this.props.peeking != nextProps.peeking)
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    this.block.current.scrollIntoView({"block": "nearest"});
+  componentDidUpdate(prevProps, prevState) { 
+    if (this.props.hasFocus && !prevProps.hasFocus) {
+      this.block.current.scrollIntoView({"block": "nearest"});
+    }
   }
 
   handleMousedown(e) {
@@ -679,7 +671,7 @@ class CardList extends React.Component {
       let childProps = {
         hasFocus: focussedNote === n.id,
         note: n,
-        key: index,
+        key: n.id,
         handleOpen: this.props.handleOpen,
         peeking: this.props.peeking
       };
