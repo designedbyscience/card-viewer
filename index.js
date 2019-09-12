@@ -236,6 +236,11 @@ function SortChooser(props) {
   return React.createElement("div", {}, children);
 }
 
+function ContentBlock(props) {
+
+  
+}
+
 class TableRow extends React.Component {
   constructor(props) {
     super(props);
@@ -309,7 +314,7 @@ function OpenCard(props) {
   }
 
   function handleClick(e) {
-    props.handleOpen(this.props.note.id);
+    props.handleOpen(props.note.id);
   }
 
   if (props.note) {
