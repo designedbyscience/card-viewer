@@ -555,7 +555,6 @@ class Card extends React.Component {
     this.block = React.createRef();
     this.handleMousedown = this.handleMousedown.bind(this);
     this.handleMouseup = this.handleMouseup.bind(this);
-    this.handleTouchEnd = this.handleTouchEnd.bind(this);
   }
 
   componentDidUpdate(prevProps, prevState) { 
@@ -574,10 +573,6 @@ class Card extends React.Component {
     if (!this.props.peeking && e.button === 0) {
       this.props.handleOpen(this.props.note.id);
     }
-  }
-
-  handleTouchEnd() {
-    this.props.handleOpen(this.props.note.id, true);
   }
 
   render() {
@@ -603,7 +598,7 @@ class Card extends React.Component {
           {
             onMouseUp: this.handleMouseup,
             onMouseDown: this.handleMousedown,
-            onTouchEnd: this.handleTouchEnd,
+         //   onTouchEnd: this.handleTouchEnd,
             className: "title",
             key: 2
           },
