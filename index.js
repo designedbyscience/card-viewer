@@ -834,9 +834,9 @@ const reqListener = function() {
     let queue = searchParams.get("queue");    
 
     if (queue.indexOf("," != -1)){
-      app.updateQueue(searchParams.get("queue")).split(",");
+      app.updateQueue(searchParams.get("queue").split(","));
     } else {
-      app.updateQueue(searchParams.get("queue")).split("\n");
+      app.updateQueue(searchParams.get("queue").split("\n"));
     }
   } else if (searchParams.has("id")) {
     app.openCard(app.noteByTitle(searchParams.get("id")))
