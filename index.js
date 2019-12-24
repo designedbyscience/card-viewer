@@ -21,6 +21,10 @@ class App extends React.Component {
       focussedNote: 1
     };
 
+    if (this.props.open) {
+      this.state.open = this.props.open;
+    }
+
     this.handleMouseUp = this.handleMouseUp.bind(this);
     this.handleKeyUp = this.handleKeyUp.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
@@ -735,6 +739,11 @@ class Application {
     })
   }
 
+  openCard(id) {
+    this.open = id;
+    this.renderAll();
+  }
+
   updateSort(sortName) {
     let so = this.sortOptions.find((s) => {return sortName === s.name});
     this.notes.sort(so.compareFunction);
@@ -815,7 +824,8 @@ class Application {
         searchResultNotes: this.searchResultNotes,
         sortOptions: this.sortOptions,
         queue: this.queue,
-        notes: this.notes
+        notes: this.notes,
+        open: this.open
       }),
       document.getElementById("root")
     );
@@ -838,8 +848,19 @@ const reqListener = function() {
     } else {
       app.updateQueue(searchParams.get("queue").split("\n"));
     }
+    
   } else if (searchParams.has("id")) {
-    app.openCard(app.noteByTitle(searchParams.get("id")))
+    app.openCard(searchParams.get("id"));
+  } else if (searchParams.has("ids")) {
+    // SETS
+    // Sets are just a bunch of ids, which will be "starred" when you land on the page
+    // Focus will be set to first one in the set
+    // We could theorectically keep named sets somewhere else
+
+    searchParams.get("ids").split(",").forEach((id) => {
+      app.updateStarred(parseInt(id,10));
+    });
+     
   } else {
     app.renderAll();
   }
