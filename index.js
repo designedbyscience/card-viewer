@@ -31,12 +31,20 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    document.addEventListener("keyup", this.handleKeyUp);
+    this.enableKeyboardShortcuts();
     document.addEventListener("keydown", this.handleKeyDown);
   }
 
   componentWillUnmount() {
     document.removeEventListener("keydown", this.handleKeyDown);
+  }
+
+  disableKeyboardShortcuts() {
+    document.removeEventListener("keyup", this.handleKeyUp);
+  }
+
+  enableKeyboardShortcuts() {
+    document.addEventListener("keyup", this.handleKeyUp);
   }
 
   showHelp() {
@@ -212,7 +220,9 @@ class App extends React.Component {
       React.createElement(Search, {
         key: 3,
         searchString: this.props.searchString,
-        queue: this.props.queue
+        queue: this.props.queue,
+        disableKeyboardShortcuts: this.disableKeyboardShortcuts.bind(this),
+        enableKeyboardShortcuts: this.enableKeyboardShortcuts.bind(this)
       }),
       gridOptions,
       gridListComponent      
@@ -417,10 +427,21 @@ class Search extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handlePaste = this.handlePaste.bind(this);
+    this.handleBlur = this.handleBlur.bind(this);
+    this.handleFocus = this.handleFocus.bind(this);
+  }
+
+  handleBlur(e) {
+    this.props.enableKeyboardShortcuts();
+  }
+
+  handleFocus(e) {
+    this.props.disableKeyboardShortcuts();
   }
 
   handleSubmit(e) {
     e.preventDefault();
+    e.target.children[0].blur();
     app.updateSearch(this.state.value);
   }
 
@@ -467,6 +488,8 @@ class Search extends React.Component {
           type: "search",
           onChange: this.handleChange,
           onPaste: this.handlePaste,
+          onBlur: this.handleBlur,
+          onFocus: this.handleFocus,
           value: this.state.value
         })
       )
