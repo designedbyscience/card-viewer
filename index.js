@@ -217,6 +217,7 @@ class App extends React.Component {
         key: 2,
         className: "starredcards"
       }),
+      React.createElement(URLDisplay, {}),
       React.createElement(Search, {
         key: 3,
         searchString: this.props.searchString,
@@ -227,6 +228,28 @@ class App extends React.Component {
       gridOptions,
       gridListComponent      
     ]);
+  }
+}
+
+class URLDisplay extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      url: "Build Url"
+    }
+  }
+
+  handleClick(e) {
+    this.setState({url: app.buildUrl()});
+  }
+
+  render(){
+    return React.createElement(
+      "div",
+      { onClick: this.handleClick.bind(this) },
+      this.state.url
+    );
   }
 }
 
@@ -765,6 +788,21 @@ class Application {
   openCard(id) {
     this.open = id;
     this.renderAll();
+  }
+
+  buildUrl() {
+    const url = window.location;
+
+    let starredNotes = this.notes.reduce((a,n) => {
+
+      if (n.starred) {
+          return `${a},${n.id}`;
+      }
+
+      return a;
+    }, "").slice(1);
+
+    return `${url.protocol}//${url.host}${url.pathname}?ids=${starredNotes}`;
   }
 
   updateSort(sortName) {
