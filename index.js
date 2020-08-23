@@ -465,7 +465,12 @@ class Search extends React.Component {
   handleSubmit(e) {
     e.preventDefault();
     e.target.children[0].blur();
-    app.updateSearch(this.state.value);
+
+    if (this.state.value.indexOf(",") > -1 ){
+      app.updateQueue(this.state.value.split(","));
+    } else {
+      app.updateSearch(this.state.value);
+    }
   }
 
   handleChange(e) {
