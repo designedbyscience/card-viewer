@@ -161,23 +161,23 @@ class App extends React.Component {
     }
 
     if (this.state && this.state.open === false) {
+      let list = this.props.searchResultNotes ? this.props.searchResultNotes : this.props.notes;
+
       if (e.code == "ArrowLeft" || e.key == "UIKeyInputLeftArrow") {
         this.setState({
-          focussedNote: getNextId(this.props.notes, this.state.focussedNote)
+          focussedNote: getNextId(list, this.state.focussedNote)
         });
       } else if (e.code == "ArrowRight" || e.key == "UIKeyInputRightArrow") {
         this.setState({
-          focussedNote: getPreviousId(this.props.notes, this.state.focussedNote)
+          focussedNote: getPreviousId(list, this.state.focussedNote)
         });
       } else if (e.code == "ArrowUp" || e.key == "UIKeyInputUpArrow") {
         this.setState({open: this.state.focussedNote});
       } 
     }
-
   }
 
   render() {
-
     let gridListComponent;
 
     let gridListProps = {
