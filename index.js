@@ -17,8 +17,7 @@ class App extends React.Component {
 
     this.state = {
       open: false,
-      grid: true,
-      focussedNote: 1
+      grid: true
     };
 
     if (this.props.open) {
@@ -112,24 +111,6 @@ class App extends React.Component {
       })
     }
 
-    const getNextId = function(list, id) {
-      let currentIndex = list.findIndex(n => {
-        return id == n.id;
-      });
-      return currentIndex == 0
-        ? list[list.length - 1].id
-        : list[currentIndex - 1].id;
-    };
-
-    const getPreviousId = function(list, id) {
-      let currentIndex = list.findIndex(n => {
-        return id == n.id;
-      });
-      return currentIndex == list.length - 1
-        ? list[0].id
-        : list[currentIndex + 1].id;
-    };
-
     const updateCardOpenState = function(directionFunction) {
       if (this.state.starredOpen) {
         this.setState({
@@ -140,18 +121,18 @@ class App extends React.Component {
           open: directionFunction(this.props.searchResultNotes, this.state.open)
         });
       } else {
+        app.updateFocussedNote(directionFunction(this.props.notes, this.state.open));
         this.setState({
-          open: directionFunction(this.props.notes, this.state.open),
-          focussedNote: directionFunction(this.props.notes, this.state.open)
+          open: directionFunction(this.props.notes, this.state.open)
         });
       }
     }.bind(this);
 
     if (this.state && this.state.open !== false) {
       if (e.code == "ArrowLeft" || e.key == "UIKeyInputLeftArrow") {
-        updateCardOpenState(getNextId);
+        updateCardOpenState(app.getNextId);
       } else if (e.code == "ArrowRight" || e.key == "UIKeyInputRightArrow") {
-        updateCardOpenState(getPreviousId);
+        updateCardOpenState(app.getPreviousId);
       } else if (e.code == "ArrowUp" || e.key == "UIKeyInputUpArrow") {
         app.updateStarred(this.state.open);
       } else if (e.code == "ArrowDown" || e.key == "UIKeyInputDownArrow") {
@@ -164,15 +145,11 @@ class App extends React.Component {
       let list = this.props.searchResultNotes ? this.props.searchResultNotes : this.props.notes;
 
       if (e.code == "ArrowLeft" || e.key == "UIKeyInputLeftArrow") {
-        this.setState({
-          focussedNote: getNextId(list, this.state.focussedNote)
-        });
+        app.updateFocussedNote(app.getNextId(list, this.props.focussedNote));
       } else if (e.code == "ArrowRight" || e.key == "UIKeyInputRightArrow") {
-        this.setState({
-          focussedNote: getPreviousId(list, this.state.focussedNote)
-        });
+        app.updateFocussedNote(app.getPreviousId(list, this.props.focussedNote));
       } else if (e.code == "ArrowUp" || e.key == "UIKeyInputUpArrow") {
-        this.setState({open: this.state.focussedNote});
+        this.setState({open: this.props.focussedNote});
       } 
     }
   }
@@ -183,7 +160,7 @@ class App extends React.Component {
     let gridListProps = {
       handleOpen: this.handleOpen.bind(this),
       searchResult: this.props.searchResult,
-      focussedNote: this.state.focussedNote,
+      focussedNote: this.props.focussedNote,
       notes: this.props.searchResult
         ? this.props.searchResultNotes
         : this.props.notes,
@@ -709,6 +686,7 @@ class Application {
   constructor(notes) {
     this.notes = notes;
     this.tags = [];
+    this.focussedNote = 1;
 
     this.notes.forEach((n, index) => {
       n.id = index + 1;
@@ -778,6 +756,24 @@ class Application {
     ];
   }
 
+  getNextId(list, id) {
+    let currentIndex = list.findIndex(n => {
+      return id == n.id;
+    });
+    return currentIndex == 0
+      ? list[list.length - 1].id
+      : list[currentIndex - 1].id;
+  };
+
+  getPreviousId(list, id) {
+    let currentIndex = list.findIndex(n => {
+      return id == n.id;
+    });
+    return currentIndex == list.length - 1
+      ? list[0].id
+      : list[currentIndex + 1].id;
+  };
+
   noteById(id) {
     return this.notes.find(n => {
       return n.id == id;
@@ -808,6 +804,11 @@ class Application {
     }, "").slice(1);
 
     return `${url.protocol}//${url.host}${url.pathname}?ids=${starredNotes}`;
+  }
+
+  updateFocussedNote(id) {
+    this.focussedNote = id;
+    this.renderAll();
   }
 
   updateSort(sortName) {
@@ -858,6 +859,7 @@ class Application {
         return 0;
       });
 
+      this.focussedNote = this.searchResultNotes[0].id;
       this.searchString = searchString;
       this.renderAll();
     } else {
@@ -872,6 +874,7 @@ class Application {
         return 0;
       });
 
+      this.focussedNote = this.notes[0].id;
       this.searchString = searchString;
       this.renderAll();
     }
@@ -884,6 +887,7 @@ class Application {
 
     ReactDOM.render(
       React.createElement(App, {
+        focussedNote: this.focussedNote,
         searchResult: this.searchResult,
         searchString: this.searchString,
         starredNotes: starredNotes,
