@@ -859,7 +859,7 @@ class Application {
         return 0;
       });
 
-      this.focussedNote = this.searchResultNotes[0].id;
+      this.focussedNote = this.searchResultNotes.length > 0 ? this.searchResultNotes[0].id : 0;
       this.searchString = searchString;
       this.renderAll();
     } else {
