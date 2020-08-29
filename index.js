@@ -191,10 +191,10 @@ class App extends React.Component {
         notes: this.props.starredNotes,
         handleOpen: this.handleOpen.bind(this),
         peeking: this.state.peeking,
+        containsURLBuilder: true,
         key: 2,
         className: "starredcards"
       }),
-      React.createElement(URLDisplay, {}),
       React.createElement(Search, {
         key: 3,
         searchString: this.props.searchString,
@@ -208,26 +208,14 @@ class App extends React.Component {
   }
 }
 
-class URLDisplay extends React.Component {
-  constructor(props) {
-    super(props);
+function URLDisplay(props) {
+    let url = props.noteid ? app.buildNoteUrl(props.noteid) : app.buildSetUrl();
 
-    this.state = {
-      url: "Build Url"
-    }
-  }
-
-  handleClick(e) {
-    this.setState({url: app.buildUrl()});
-  }
-
-  render(){
     return React.createElement(
-      "div",
-      { onClick: this.handleClick.bind(this) },
-      this.state.url
+      "a",
+      { href: url },
+      "🔗"
     );
-  }
 }
 
 function GridTableSwitcher(props) {
@@ -350,6 +338,7 @@ function OpenCard(props) {
               { onClick: handleClick, className: "title pointer", key: 2 },
               props.note.title
             ),
+            React.createElement(URLDisplay, {noteid: props.note.id}),
             React.createElement(
               "a",
               {onClick: handleClick, className: "pointer"},
@@ -673,11 +662,19 @@ function CardList(props) {
     classNames[props.className] = true;
   }
 
-  return React.createElement(
-    "div",
-    { className: classNameBuilder(classNames) },
-    children
-  );
+  if (props.containsURLBuilder && props.notes && props.notes.length > 0) {
+    return React.createElement(
+      "div",
+      { className: classNameBuilder(classNames) },
+      [React.createElement(URLDisplay), ...children]
+    );
+  } else {
+    return React.createElement(
+      "div",
+      { className: classNameBuilder(classNames) },
+      children
+    );
+  }
 }
 
 let app;
@@ -791,7 +788,13 @@ class Application {
     this.renderAll();
   }
 
-  buildUrl() {
+  buildNoteUrl(id) {
+    const url = window.location;
+
+    return `${url.protocol}//${url.host}${url.pathname}?id=${id}`;
+  }
+
+  buildSetUrl() {
     const url = window.location;
 
     let starredNotes = this.notes.reduce((a,n) => {
